@@ -1,0 +1,17 @@
+version: '3.8'  # Versión actualizada
+services:
+  db:
+    image: postgres:15
+    container_name: proyecto_final
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: samira360
+      POSTGRES_PASSWORD: sami_360
+      POSTGRES_DB: ProyectoFinal_3S
+    ports:
+      - "5432:5432"  
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+volumes:
+  pg_data:
