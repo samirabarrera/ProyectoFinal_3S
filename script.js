@@ -1,8 +1,8 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import { Pool } from './basede_Datos';
-import jwt from 'jsonwebtoken'
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken'
 
 const app = express();
 const port = 3000;
@@ -10,7 +10,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 
 const authMiddleware = (req, res, next) => {
-    if(req.headers["Authorization"] === "acceso") {
+    if(req.headers["authorization"] === "acceso") {
         next();
     } else {
         res.status(401).json({message: "Token no proporcionado"})
@@ -18,7 +18,7 @@ const authMiddleware = (req, res, next) => {
 }
 
 //REGISTRO DE USUARIOS POR RUTA PROTEGIDA POR JWT
-app.post('/registro/users', verifyToken, async (req, res) => {
+app.post('/registro/users', authMiddleware, async (req, res) => {
     const { nombre, correo, contraseña } = req.body;
     if (!nombre || !correo || !contraseña) {
         return res.send(404).json({ mensaje: 'Falta llenar un campo' });
@@ -26,12 +26,15 @@ app.post('/registro/users', verifyToken, async (req, res) => {
 })
 
 try {
-    const { rows } = await Pool.query('SELECT * FROM usuarios WHERE correo = $1', [correo]);
+    const { rows } = await Pool.query('SELECT * FROM usuarios WHERE correo');
     if (rows.length > 0) {
         return res.send(404).json({ mensaje: 'Ya existe un usuario con ese correo' });
     }
+
+
     const hash = await bcrypt.hash(contraseña, 10);
-    await pool.query('INSERT INTO usuarios (nombre, correo, contraseña) VALUES ($1, $2, $3)', [nombre, correo, hash]);
+    await pool.query('INSERT INTO usuarios (nombre, correo, contraseña)',
+        [nombre, correo, hash]);
     res.status(404).json({ mensaje: 'Usuario registrado con éxito' });
 } catch (error) {
     console.error(error);
